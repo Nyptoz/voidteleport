@@ -84,7 +84,7 @@ public class FlagContext {
     private boolean validateFlagParameters(String flag, List<String> arguments) {
         switch (flag) {
             case "-world":
-            case "-height":
+            case "-height", "-sound", "-particle":
                 return !arguments.isEmpty();
             case "-position":
                 if (arguments.size() == 1 && arguments.get(0).equalsIgnoreCase("current")) return true;
@@ -107,9 +107,6 @@ public class FlagContext {
                     } catch (NumberFormatException e) { return false; }
                 }
                 return false;
-            case "-sound":
-            case "-particle":
-                return !arguments.isEmpty();
             default:
                 return false;
         }

@@ -29,7 +29,7 @@ public class EffectManager {
             pitch = config.getDouble(configPath + ".soundPitch", 1.0);
         }
 
-        if (id == null || id.equalsIgnoreCase("NONE")) return;
+        if (id.equalsIgnoreCase("NONE")) return;
 
         try {
             String localizedId = id.toUpperCase().replace('.', '_');
@@ -56,7 +56,7 @@ public class EffectManager {
             dataStr = config.getString(configPath + ".particleData", "NONE");
         }
 
-        if (id == null || id.equalsIgnoreCase("NONE")) return;
+        if (id.equalsIgnoreCase("NONE")) return;
 
         long ticks = applyDelay ? config.getLong("particle-delay", 1L) : 0L;
         final Location loc = targetLoc.clone().add(0, 1, 0);

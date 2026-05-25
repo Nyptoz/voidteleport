@@ -5,6 +5,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.Objects;
 
 public class VoidTeleport extends JavaPlugin {
 
@@ -26,8 +27,8 @@ public class VoidTeleport extends JavaPlugin {
 
         for (String cmd : commandNodes) {
             if (getCommand(cmd) != null) {
-                getCommand(cmd).setExecutor(commandExecutor);
-                getCommand(cmd).setTabCompleter(tabCompleter);
+                Objects.requireNonNull(getCommand(cmd)).setExecutor(commandExecutor);
+                Objects.requireNonNull(getCommand(cmd)).setTabCompleter(tabCompleter);
             }
         }
 

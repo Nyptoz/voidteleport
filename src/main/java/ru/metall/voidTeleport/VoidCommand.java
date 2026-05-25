@@ -10,9 +10,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class VoidCommand implements CommandExecutor {
 
@@ -108,42 +110,40 @@ public class VoidCommand implements CommandExecutor {
     }
 
     private boolean hasPerms(CommandSender s, String node) {
-        if (s.hasPermission(node)) return true;
+        if (s.hasPermission(node)) return false;
         if (plugin.getConfig().getBoolean("show-no-permissions", false)) {
             sendMessage(s, "no-permission", null, null, null);
         }
-        return false;
+        return true;
     }
 
     private void runFailSound(CommandSender s) {
-        if (!(s instanceof Player)) return;
+        if (!(s instanceof Player p)) return;
         FileConfiguration c = plugin.getMessagesConfig();
         if (!c.getBoolean("use-sounds", true)) return;
         try {
-            Player p = (Player) s;
-            p.playSound(p.getLocation(), Sound.valueOf(c.getString("fail-sound")), 1f, 1f);
+            p.playSound(p.getLocation(), Sound.valueOf(Objects.requireNonNull(c.getString("fail-sound"))), 1f, 1f);
         } catch (Exception ignored) {}
     }
 
     private void runSuccessSound(CommandSender s) {
-        if (!(s instanceof Player)) return;
+        if (!(s instanceof Player p)) return;
         FileConfiguration c = plugin.getMessagesConfig();
         if (!c.getBoolean("use-sounds", true)) return;
         try {
-            Player p = (Player) s;
-            p.playSound(p.getLocation(), Sound.valueOf(c.getString("success-sound")), 1f, 1f);
+            p.playSound(p.getLocation(), Sound.valueOf(Objects.requireNonNull(c.getString("success-sound"))), 1f, 1f);
         } catch (Exception ignored) {}
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, String label, String @NonNull [] args) {
         // Fix: Use label to properly capture direct alias calls like /reloadspawn
         String action = label.toLowerCase();
         String[] actionArgs = args;
 
         if (action.equals("voidteleport") || action.equals("vt")) {
             if (args.length == 0 || args[0].equalsIgnoreCase("info")) {
-                if (!hasPerms(sender, "voidteleport.player")) return true;
+                if (hasPerms(sender, "voidteleport.player")) return true;
                 FileConfiguration config = plugin.getMessagesConfig();
                 if (config.contains("messages.plugin-info") && config.isList("messages.plugin-info")) {
                     for (String line : config.getStringList("messages.plugin-info")) {
@@ -158,7 +158,7 @@ public class VoidCommand implements CommandExecutor {
         }
 
         String permissionNode = action.equals("spawn") ? "voidteleport.player" : "voidteleport.admin";
-        if (!hasPerms(sender, permissionNode)) return true;
+        if (hasPerms(sender, permissionNode)) return true;
 
         FlagContext context = new FlagContext(actionArgs);
 
@@ -172,7 +172,7 @@ public class VoidCommand implements CommandExecutor {
         World targetWorld = null;
         if (context.hasFlag("-world")) {
             List<String> wArgs = context.getFlagArgs("-world");
-            if (!wArgs.isEmpty()) targetWorld = Bukkit.getWorld(wArgs.get(0));
+            if (!wArgs.isEmpty()) targetWorld = Bukkit.getWorld(wArgs.getFirst());
         } else if (actionArgs.length > 0 && !actionArgs[0].startsWith("-") && Bukkit.getWorld(actionArgs[0]) != null) {
             targetWorld = Bukkit.getWorld(actionArgs[0]);
         } else if (sender instanceof Player) {
@@ -181,7 +181,7 @@ public class VoidCommand implements CommandExecutor {
 
         if (context.hasFlag("-world") && targetWorld == null) {
             List<String> wArgs = context.getFlagArgs("-world");
-            sendMessage(sender, "world-not-found", wArgs.isEmpty() ? "Unknown" : wArgs.get(0), null, null);
+            sendMessage(sender, "world-not-found", wArgs.isEmpty() ? "Unknown" : wArgs.getFirst(), null, null);
             runFailSound(sender);
             return true;
         }
@@ -221,11 +221,11 @@ public class VoidCommand implements CommandExecutor {
                 if (context.hasFlag("-height")) {
                     List<String> hArgs = context.getFlagArgs("-height");
                     if (!hArgs.isEmpty()) {
-                        try { heightValue = Double.parseDouble(hArgs.get(0)); } catch (NumberFormatException ignored) {}
+                        try { heightValue = Double.parseDouble(hArgs.getFirst()); } catch (NumberFormatException ignored) {}
                     }
                 }
                 if (heightValue == null && !context.getRawArgsWithoutFlags().isEmpty()) {
-                    try { heightValue = Double.parseDouble(context.getRawArgsWithoutFlags().get(0)); } catch (NumberFormatException ignored) {}
+                    try { heightValue = Double.parseDouble(context.getRawArgsWithoutFlags().getFirst()); } catch (NumberFormatException ignored) {}
                 }
                 if (heightValue == null) {
                     if (sender instanceof Player) {
@@ -279,11 +279,10 @@ public class VoidCommand implements CommandExecutor {
                     runFailSound(sender);
                     return true;
                 }
-                if (!(sender instanceof Player)) {
+                if (!(sender instanceof Player p)) {
                     sendMessage(sender, "only-players", null, null, null);
                     return true;
                 }
-                Player p = (Player) sender;
                 Location targetLoc = new Location(targetWorld,
                         plugin.getConfig().getDouble(spawnPath + ".spawnLocation.x"),
                         plugin.getConfig().getDouble(spawnPath + ".spawnLocation.y"),
@@ -367,7 +366,7 @@ public class VoidCommand implements CommandExecutor {
                     if (context.hasFlag("-height")) {
                         List<String> hArgs = context.getFlagArgs("-height");
                         if (!hArgs.isEmpty()) {
-                            cfg.set(path + ".teleportHeight", Double.parseDouble(hArgs.get(0)));
+                            cfg.set(path + ".teleportHeight", Double.parseDouble(hArgs.getFirst()));
                         }
                     }
 
@@ -403,7 +402,7 @@ public class VoidCommand implements CommandExecutor {
                             cfg.set(path + ".particle.speed", 0.0);
                             cfg.set(path + ".particle.data", "NONE");
                         } else {
-                            cfg.set(path + ".particle.id", pArgs.get(0).toUpperCase());
+                            cfg.set(path + ".particle.id", pArgs.getFirst().toUpperCase());
                             particleModified = true;
 
                             int count = 10;
