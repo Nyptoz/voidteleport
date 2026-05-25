@@ -1,0 +1,31 @@
+show-no-permissions: false
+register-commands: false
+
+preview-sounds: true
+preview-particles: true
+
+particle-delay: 1
+
+worlds:
+  lobby:
+    teleportHeight: -24
+    spawnLocation:
+      x: 1.5
+      y: 64.0
+      z: -3.5
+      pitch: 0.0
+      yaw: 0.0
+
+    sound:
+      id: BLOCK.AMETHYST_BLOCK.STEP
+      volume: 1.0
+      pitch: 0.75
+
+    particle:
+      id: DUST_COLOR_TRANSITION
+      count: 64
+      speed: 1.0
+      data: 0 170 170 85 255 255 1.25
+
+    message: '&eYou fell into the void the &llobby'
+    messagePrefix: true

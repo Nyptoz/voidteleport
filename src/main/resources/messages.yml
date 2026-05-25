@@ -1,0 +1,50 @@
+use-prefix: true
+prefix: '&b&lVoid&3&lTeleport &8» '
+
+use-sounds: true
+success-sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+fail-sound: "BLOCK_NOTE_BLOCK_DIDGERIDOO"
+play-sound-on-set: true
+
+messages:
+  no-permission: "&cYou don't have permission to execute this command!"
+  only-players: "&cPlease &4specify World Names &cin Terminal"
+
+  world-not-found: "&cCouldn't find the World &4%world%"
+  spawn-not-found: "&cCouldn't find a Spawn Data for &4%world%"
+
+  all-reloaded: "&fAll &7Config Files have been reloaded"
+  world-reloaded: "&f%world%'s Spawn Data &7has been reloaded"
+  messages-reloaded: "&fMessages Config &7has been reloaded"
+
+  parse-error: "&cThere was an error &4parsing &cthe coordinates!"
+
+  spawn-set: "&7Spawn has been set for &f%world%"
+  spawn-deleted: "&7Deleted all Spawn Data for &f%world%"
+  spawn-edited: "&7Edited &f%world%'s Spawn"
+
+  height-set: "&7Height has been set to &f%height% &7for &f%world%"
+  height-below-spawn: "&cHeight wasn't changed due to it being &4above &cSpawn Position"
+
+  force-teleport: "&7Teleported you to &f%world%'s Spawn"
+
+  spawn-info:
+    - ''
+    - '&8&m-          -&r &b%world%''s Spawn Data &8&m-           -'
+    - '&8• &7Limit Height: &f%height%'
+    - '&8• &7Coordinates: &f%x% %y% %z%'
+    - '&8• &7Sound: &f%sound%'
+    - '<req:%sound%>  &8• &7Volume: &f%volume%%%'
+    - '<req:%sound%>  &8• &7Pitch: &f%pitch%%%'
+    - '&8• &7Particle: &f%particle%'
+    - '<req:%particle%>  &8• &7Extra Properties: &f%particleData%'
+    - '&8&m-                                                  -'
+    - ''
+
+  plugin-info:
+    - ''
+    - '&8&m-                   -&r &fInfo &8&m-                   -'
+    - '         &b&lVoid&3&lTeleport &r&7- &f%version%'
+    - '   &7A simple Plugin by &eMetall_King&r&7.'
+    - '&8&m-                                                -'
+    - ''

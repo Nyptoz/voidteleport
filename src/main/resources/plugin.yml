@@ -1,0 +1,25 @@
+name: VoidTeleport
+version: '${version}'
+
+main: ru.metall.voidTeleport.VoidTeleport
+api-version: '1.21'
+
+commands:
+  voidteleport:
+    description: Master command.
+    aliases: [vt]
+  setspawn:
+    description: Set a spawn location.
+  editspawn:
+    description: Edit a spawn location.
+  delspawn:
+    description: Delete a spawn location.
+  spawn:
+    description: Teleport to a world spawn.
+  spawninfo:
+    description: View VoidTeleport data for a world.
+  reloadspawn:
+    description: Reload a specific world configuration.
+    aliases: [spawnreload]
+  setheight:
+    description: Set the teleport threshold height.
