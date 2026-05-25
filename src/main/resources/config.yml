@@ -27,5 +27,5 @@ worlds:
       speed: 1.0
       data: 0 170 170 85 255 255 1.25
 
-    message: '&eYou fell into the void the &llobby'
+    message: '&eYou fell into the &llobby &r&evoid'
     messagePrefix: true

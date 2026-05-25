@@ -2,9 +2,9 @@ use-prefix: true
 prefix: '&b&lVoid&3&lTeleport &8» '
 
 use-sounds: true
-success-sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+
+success-sound: "ENTITY_EXPERIgENCE_ORB_PICKUP"
 fail-sound: "BLOCK_NOTE_BLOCK_DIDGERIDOO"
-play-sound-on-set: true
 
 messages:
   no-permission: "&cYou don't have permission to execute this command!"
