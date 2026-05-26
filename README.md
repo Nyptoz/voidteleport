@@ -83,7 +83,6 @@ use-prefix: true
 prefix: '&b&lVoid&3&lTeleport &8» '
 
 use-sounds: true
-
 success-sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
 fail-sound: "BLOCK_NOTE_BLOCK_DIDGERIDOO"
 
@@ -92,7 +91,7 @@ messages:
   only-players: "&cPlease &4specify World Names &cin Terminal"
 
   world-not-found: "&cCouldn't find the World &4%world%"
-  spawn-not-found: "&cCouldn't find a Spawn Data for &4%world%"
+  spawn-not-found: "&cCouldn't find Spawn Data for &4%world%"
 
   all-reloaded: "&fAll &7Config Files have been reloaded"
   world-reloaded: "&f%world%'s Spawn Data &7has been reloaded"
