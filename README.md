@@ -131,5 +131,7 @@ messages:
     - ''
 ```
 
+---
+
 ## Support
 See the Plugin Wiki for comprehensive API details, or join our official Discord Server to ask questions, check development builds, or report bugs.
