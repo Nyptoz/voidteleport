@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
@@ -69,10 +70,12 @@ public class VoidCommand implements CommandExecutor {
         String volume = String.valueOf((int)(dataCfg.getDouble(worldPath + ".sound.volume", 1.0) * 100));
         String pitch = String.valueOf((int)(dataCfg.getDouble(worldPath + ".sound.pitch", 1.0) * 100));
 
-        String particle = dataCfg.getString(worldPath + ".particle.id", "NONE");
+        String particle = dataCfg.getString(worldPath + ".particle.id", "NONE").toUpperCase();
         String pCount = String.valueOf(dataCfg.getInt(worldPath + ".particle.count", 10));
         String pSpeed = String.valueOf(dataCfg.getDouble(worldPath + ".particle.speed", 0.0));
         String pData = dataCfg.getString(worldPath + ".particle.data", "NONE");
+
+        String formattedData = getFormattedData(pData, particle);
 
         for (String line : config.getStringList(path)) {
             String processedLine = line;
@@ -102,16 +105,63 @@ public class VoidCommand implements CommandExecutor {
                     .replace("%particle%", particle)
                     .replace("%particleCount%", pCount)
                     .replace("%particleSpeed%", pSpeed)
-                    .replace("%particleData%", pData)
+                    .replace("%particleData%", formattedData)
                     .replace("%%", "%");
 
             sender.sendMessage(ChatColor.translateAlternateColorCodes('&', processedLine));
         }
     }
 
+    private static @NonNull String getFormattedData(String pData, String particle) {
+        String formattedData = pData;
+        if (!pData.equalsIgnoreCase("NONE") && !pData.isEmpty()) {
+            String[] split = pData.split(" ");
+            if (particle.equals("DUST") || particle.equals("DUST_PLUME") || particle.equals("DUST_PILLAR")) {
+                if (split.length >= 3) {
+                    String r = ChatColor.RED + split[0];
+                    String g = ChatColor.GREEN + split[1];
+                    String b = ChatColor.BLUE + split[2];
+                    String size = split.length >= 4 ? ChatColor.GOLD + split[3] : ChatColor.GOLD + "1.0";
+                    formattedData = String.format("%s %s %s %s", r, g, b, size);
+                }
+            } else if (particle.equals("DUST_COLOR_TRANSITION")) {
+                if (split.length >= 6) {
+                    String r1 = ChatColor.RED + split[0];
+                    String g1 = ChatColor.GREEN + split[1];
+                    String b1 = ChatColor.BLUE + split[2];
+                    String r2 = ChatColor.DARK_RED + split[3];
+                    String g2 = ChatColor.DARK_GREEN + split[4];
+                    String b2 = ChatColor.DARK_BLUE + split[5];
+                    String size = split.length >= 7 ? ChatColor.GOLD + split[6] : ChatColor.GOLD + "1.0";
+                    formattedData = String.format("%s %s %s %s %s %s %s", r1, g1, b1, r2, g2, b2, size);
+                }
+            } else {
+                formattedData = ChatColor.WHITE + pData;
+            }
+        }
+        return formattedData;
+    }
+
     private boolean hasPerms(CommandSender s, String node) {
         if (s.hasPermission(node)) return false;
-        if (plugin.getConfig().getBoolean("show-no-permissions", false)) {
+
+        FileConfiguration cfg = plugin.getConfig();
+        boolean showMsg = false;
+        if (cfg.contains("groups")) {
+            ConfigurationSection sec = cfg.getConfigurationSection("groups");
+            assert sec != null;
+            for (String key : sec.getKeys(false)) {
+                String groupPerm = sec.getString(key + ".permission", "");
+                if (!groupPerm.isEmpty() && s.hasPermission(groupPerm)) {
+                    showMsg = sec.getBoolean(key + ".show-no-permissions", false);
+                    break;
+                }
+            }
+        } else {
+            showMsg = cfg.getBoolean("show-no-permissions", false);
+        }
+
+        if (showMsg) {
             sendMessage(s, "no-permission", null, null, null);
         }
         return true;
@@ -136,9 +186,8 @@ public class VoidCommand implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(@NonNull CommandSender sender, @NonNull Command command, String label, String @NonNull [] args) {
-        // Fix: Use label to properly capture direct alias calls like /reloadspawn
-        String action = label.toLowerCase();
+    public boolean onCommand(@NonNull CommandSender sender, Command command, @NonNull String label, String @NonNull [] args) {
+        String action = command.getName().toLowerCase();
         String[] actionArgs = args;
 
         if (action.equals("voidteleport") || action.equals("vt")) {
@@ -156,6 +205,8 @@ public class VoidCommand implements CommandExecutor {
             action = args[0].toLowerCase();
             actionArgs = Arrays.copyOfRange(args, 1, args.length);
         }
+
+        if (action.equals("reloadspawn") || action.equals("spawnreload")) action = "reloadspawn";
 
         String permissionNode = action.equals("spawn") ? "voidteleport.player" : "voidteleport.admin";
         if (hasPerms(sender, permissionNode)) return true;
@@ -207,6 +258,7 @@ public class VoidCommand implements CommandExecutor {
                     plugin.reloadConfig();
                     sendMessage(sender, "world-reloaded", choice, null, null);
                 }
+                if (sender instanceof Player) ((Player) sender).updateCommands();
                 runSuccessSound(sender);
                 return true;
 
@@ -257,6 +309,11 @@ public class VoidCommand implements CommandExecutor {
                 return true;
 
             case "delspawn":
+                if (!plugin.getConfig().contains("worlds." + wName)) {
+                    sendMessage(sender, "spawn-not-found", wName, null, null);
+                    runFailSound(sender);
+                    return true;
+                }
                 plugin.getConfig().set("worlds." + wName, null);
                 plugin.saveConfig();
                 sendMessage(sender, "spawn-deleted", wName, null, null);

@@ -1,8 +1,16 @@
-show-no-permissions: false
-register-commands: false
+groups:
+  default:
+    permission: "voidteleport.group.default"
+    show-no-permissions: true
+    register-commands: true
+  admin:
+    permission: "voidteleport.group.admin"
+    show-no-permissions: true
+    register-commands: true
 
-preview-sounds: true
-preview-particles: true
+preview:
+  sounds: true
+  particles: true
 
 particle-delay: 1
 
