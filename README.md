@@ -41,39 +41,48 @@ An intuitive spawn management system manageable via in-game commands or straight
 ---
 
 ## Configuration Files
-Upon initial startup, the plugin automatically generates a dedicated asset folder at `/plugins/VoidTeleport/`. It generates the following default configurations:
+Upon initial startup, the plugin automatically generates a dedicated asset folder at `/plugins/VoidTeleport/`. It generates the following default configurations. See the Plugin Wiki for details on what these exactly do.
 
 #### config.yml
 ```yaml
-show-no-permissions: true
+groups:
+  default:
+    permission: "voidteleport.group.default"
+    show-no-permissions: true
+    register-commands: true
+  admin:
+    permission: "voidteleport.group.admin"
+    show-no-permissions: true
+    register-commands: true
 
-preview-sounds: true
-preview-particles: true
+preview:
+  sounds: true
+  particles: true
 
 particle-delay: 1
 
 worlds:
   lobby:
-    teleportHeight: 0.0
+    teleportHeight: -24
     spawnLocation:
       x: 1.5
       y: 64.0
       z: -3.5
       pitch: 0.0
       yaw: 0.0
-    
+
     sound:
       id: BLOCK.AMETHYST_BLOCK.STEP
       volume: 1.0
       pitch: 0.75
-    
+
     particle:
       id: DUST_COLOR_TRANSITION
       count: 64
       speed: 1.0
       data: 0 170 170 85 255 255 1.25
-    
-    message: '&eYou fell into the void the &llobby'
+
+    message: '&eYou fell into the &llobby &r&evoid'
     messagePrefix: true
 ```
 
@@ -83,7 +92,6 @@ use-prefix: true
 prefix: '&b&lVoid&3&lTeleport &8» '
 
 use-sounds: true
-
 success-sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
 fail-sound: "BLOCK_NOTE_BLOCK_DIDGERIDOO"
 
@@ -92,7 +100,7 @@ messages:
   only-players: "&cPlease &4specify World Names &cin Terminal"
 
   world-not-found: "&cCouldn't find the World &4%world%"
-  spawn-not-found: "&cCouldn't find a Spawn Data for &4%world%"
+  spawn-not-found: "&cCouldn't find Spawn Data for &4%world%"
 
   all-reloaded: "&fAll &7Config Files have been reloaded"
   world-reloaded: "&f%world%'s Spawn Data &7has been reloaded"
@@ -130,7 +138,6 @@ messages:
     - '&8&m-                                                -'
     - ''
 ```
-
 ---
 
 ## Support
