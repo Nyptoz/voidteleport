@@ -29,7 +29,7 @@ public class EffectManager {
             pitch = config.getDouble(configPath + ".soundPitch", 1.0);
         }
 
-        if (id.equalsIgnoreCase("NONE")) return;
+        if (id == null || id.equalsIgnoreCase("NONE")) return;
 
         try {
             String localizedId = id.toUpperCase().replace('.', '_');
@@ -56,53 +56,22 @@ public class EffectManager {
             dataStr = config.getString(configPath + ".particleData", "NONE");
         }
 
-        if (id.equalsIgnoreCase("NONE")) return;
+        if (id == null || id.equalsIgnoreCase("NONE")) return;
 
         long ticks = applyDelay ? config.getLong("particle-delay", 1L) : 0L;
-        final Location loc = targetLoc.clone().add(0, 0.2, 0); // Spawns slightly above the floor
+        final Location loc = targetLoc.clone().add(0, 1, 0);
 
         Runnable spawnTask = () -> {
             if (applyDelay && !player.isOnline()) return;
             try {
                 String normalizedId = id.toUpperCase().replace('.', '_');
+                Particle particle = Particle.valueOf(normalizedId);
 
-                // Map custom types to their vanilla base particle engines
-                Particle particle;
-                boolean isPlume = normalizedId.equals("DUST_PLUME");
-                boolean isPillar = normalizedId.equals("DUST_PILLAR");
+                // Natively detect and allocate structural arguments using the Spigot framework rules
+                Object dataObject = parseParticleData(particle, dataStr);
 
-                if (isPlume || isPillar) {
-                    particle = Particle.DUST;
-                } else {
-                    particle = Particle.valueOf(normalizedId);
-                }
-
-                Object dataObject = parseParticleData(particle, normalizedId, dataStr);
-
-                // Handle custom geometric shapes if selected
-                if (isPlume) {
-                    // Upward spraying plume effect
-                    for (int i = 0; i < count; i++) {
-                        double offsetX = (Math.random() - 0.5) * 0.4;
-                        double offsetZ = (Math.random() - 0.5) * 0.4;
-                        double upwardSpeed = 0.1 + (Math.random() * speed);
-                        world.spawnParticle(particle, loc.clone().add(offsetX, 0, offsetZ), 0, 0, upwardSpeed, 0, 1.0, dataObject, true);
-                    }
-                } else if (isPillar) {
-                    // Cylinder pillar effect ascending from the ground up
-                    for (int i = 0; i < count; i++) {
-                        double angle = Math.random() * 2 * Math.PI;
-                        double radius = 0.3;
-                        double x = Math.cos(angle) * radius;
-                        double y = Math.random() * 2.0; // 2 blocks high
-                        double z = Math.sin(angle) * radius;
-                        world.spawnParticle(particle, loc.clone().add(x, y, z), 1, 0, 0, 0, 0, dataObject, true);
-                    }
-                } else {
-                    // Default vanilla fallback distribution
-                    world.spawnParticle(particle, loc, count, 0.5, 0.5, 0.5, speed, dataObject, true);
-                }
-
+                // Spawns everything natively using your exact speed settings!
+                world.spawnParticle(particle, loc, count, 0.5, 0.5, 0.5, speed, dataObject, true);
             } catch (Exception ignored) {}
         };
 
@@ -113,24 +82,33 @@ public class EffectManager {
         }
     }
 
-    private static Object parseParticleData(Particle particle, String idStr, String dataStr) {
+    private static Object parseParticleData(Particle particle, String dataStr) {
         if (dataStr == null || dataStr.equalsIgnoreCase("NONE") || dataStr.isEmpty()) return null;
 
-        // BlockData conversion
-        try {
-            Class<?> dataType = particle.getDataType();
-            if (dataType == org.bukkit.block.data.BlockData.class) {
+        Class<?> dataType = particle.getDataType();
+
+        // 1. Matches Block Data types (BLOCK, BLOCK_CRUMBLE, BLOCK_DESTRUCT, BLOCK_SLIDE, FALLING_DUST)
+        if (dataType == org.bukkit.block.data.BlockData.class) {
+            try {
                 Material mat = Material.valueOf(dataStr.toUpperCase());
-                return mat.isBlock() ? Bukkit.createBlockData(mat) : Bukkit.createBlockData(Material.STONE);
+                if (mat.isBlock()) return Bukkit.createBlockData(mat);
+            } catch (Exception e) {
+                return Bukkit.createBlockData(Material.STONE);
             }
-            if (dataType == ItemStack.class) {
+        }
+
+        // 2. Matches Item Data types (ITEM, ITEM_SLIME, ITEM_SNOWBALL)
+        if (dataType == ItemStack.class) {
+            try {
                 Material mat = Material.valueOf(dataStr.toUpperCase());
                 return new ItemStack(mat);
+            } catch (Exception e) {
+                return new ItemStack(Material.STONE);
             }
-        } catch (Exception ignored) {}
+        }
 
-        // Dust & Custom layouts options conversion
-        if (idStr.equals("DUST") || idStr.equals("DUST_PLUME") || idStr.equals("DUST_PILLAR")) {
+        // 3. Matches Single Colors + Size parameters (DUST / REDSTONE)
+        if (dataType == Particle.DustOptions.class) {
             try {
                 String[] split = dataStr.split(" ");
                 int r = Integer.parseInt(split[0]);
@@ -143,7 +121,8 @@ public class EffectManager {
             }
         }
 
-        if (idStr.equals("DUST_COLOR_TRANSITION")) {
+        // 4. Matches Color Transition parameters (DUST_COLOR_TRANSITION)
+        if (dataType == Particle.DustTransition.class) {
             try {
                 String[] split = dataStr.split(" ");
                 int r1 = Integer.parseInt(split[0]);
@@ -159,6 +138,7 @@ public class EffectManager {
             }
         }
 
+        // Returns null cleanly for normal un-configured particles (like DUST_PLUME, GUST, WHITE_SMOKE)
         return null;
     }
 }

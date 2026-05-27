@@ -463,30 +463,33 @@ public class VoidCommand implements CommandExecutor {
                             particleModified = true;
 
                             int count = 10;
-                            if (pArgs.size() > 1) {
-                                try { count = Integer.parseInt(pArgs.get(1)); } catch (NumberFormatException ignored) {}
-                            }
-                            cfg.set(path + ".particle.count", count);
-
                             double speed = 0.0;
-                            if (pArgs.size() > 2) {
-                                try { speed = Double.parseDouble(pArgs.get(2)); } catch (NumberFormatException ignored) {}
-                            }
-                            cfg.set(path + ".particle.speed", speed);
+                            StringBuilder dataBuilder = new StringBuilder();
 
-                            if (pArgs.size() > 3) {
-                                StringBuilder dataBuilder = new StringBuilder();
-                                for (int i = 3; i < pArgs.size(); i++) {
-                                    dataBuilder.append(pArgs.get(i)).append(" ");
-                                }
-                                cfg.set(path + ".particle.data", dataBuilder.toString().trim());
+                            // If the second argument is a raw Material/Data string instead of a count
+                            if (pArgs.size() == 2 && !isInteger(pArgs.get(1))) {
+                                cfg.set(path + ".particle.count", 10);
+                                cfg.set(path + ".particle.speed", 0.0);
+                                cfg.set(path + ".particle.data", pArgs.get(1));
                             } else {
-                                if (pArgs.size() == 2 && !isInteger(pArgs.get(1))) {
-                                    cfg.set(path + ".particle.data", pArgs.get(1));
-                                    cfg.set(path + ".particle.count", 10);
+                                // Standard progressive extraction format: [Name] [Count] [Speed] [Data...]
+                                if (pArgs.size() > 1) {
+                                    try { count = Integer.parseInt(pArgs.get(1)); } catch (NumberFormatException ignored) {}
+                                }
+                                if (pArgs.size() > 2) {
+                                    try { speed = Double.parseDouble(pArgs.get(2)); } catch (NumberFormatException ignored) {}
+                                }
+                                if (pArgs.size() > 3) {
+                                    for (int i = 3; i < pArgs.size(); i++) {
+                                        dataBuilder.append(pArgs.get(i)).append(" ");
+                                    }
+                                    cfg.set(path + ".particle.data", dataBuilder.toString().trim());
                                 } else {
                                     cfg.set(path + ".particle.data", "NONE");
                                 }
+
+                                cfg.set(path + ".particle.count", count);
+                                cfg.set(path + ".particle.speed", speed);
                             }
                         }
                     }

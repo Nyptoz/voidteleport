@@ -30,7 +30,8 @@ public class VoidTabCompleter implements TabCompleter {
         if (!cfg.contains("groups")) return true;
 
         ConfigurationSection sec = cfg.getConfigurationSection("groups");
-        assert sec != null;
+        if (sec == null) return true;
+
         for (String key : sec.getKeys(false)) {
             String groupPerm = sec.getString(key + ".permission", "");
             if (!groupPerm.isEmpty() && sender.hasPermission(groupPerm)) {
@@ -42,7 +43,6 @@ public class VoidTabCompleter implements TabCompleter {
 
     @Override
     public List<String> onTabComplete(@NonNull CommandSender sender, @NonNull Command command, @NonNull String alias, String @NonNull [] args) {
-        // Bug fix 6: Intercept execution to check group permission registries
         if (!shouldRegisterCommands(sender)) {
             return Collections.emptyList();
         }
@@ -51,43 +51,48 @@ public class VoidTabCompleter implements TabCompleter {
         String currentArg = args[args.length - 1];
 
         String baseCmd = command.getName().toLowerCase();
-        String subCommand = alias.toLowerCase(); // Use alias to correctly recognize standalone execution frames
-        int flagStartIndex;
+        String subCommand = baseCmd;
+        int flagStartIndex = 0;
 
+        // Unified parser wrapper handling master command routing vs direct standalone aliases
         if (baseCmd.equals("voidteleport") || baseCmd.equals("vt")) {
             if (args.length == 1) {
-                // Bug fix 3 & 4: Restored complete sub-command collection listings
                 return StringUtil.copyPartialMatches(currentArg, Arrays.asList("info", "spawn", "spawninfo", "setheight", "setspawn", "editspawn", "reload", "reloadspawn", "delspawn"), new ArrayList<>());
             }
             subCommand = args[0].toLowerCase();
             flagStartIndex = 1;
         } else {
+            // Direct execution route (e.g. /reloadspawn)
+            subCommand = baseCmd;
             flagStartIndex = 0;
         }
 
-        // Standardize base subCommand trackers for alternate labels
+        // Standardize alternative action tags uniformly
         if (subCommand.equals("spawnreload")) subCommand = "reloadspawn";
 
+        // FIXED: Structural length requirements calculations
         if (subCommand.equals("spawn") || subCommand.equals("spawninfo") || subCommand.equals("reloadspawn") || subCommand.equals("delspawn")) {
             if (args.length - flagStartIndex == 1) {
                 for (World w : Bukkit.getWorlds()) completions.add(w.getName());
+                return StringUtil.copyPartialMatches(currentArg, completions, new ArrayList<>());
             }
-            return StringUtil.copyPartialMatches(currentArg, completions, new ArrayList<>());
+            return Collections.emptyList();
         }
 
         if (subCommand.equals("reload")) {
             if (args.length - flagStartIndex == 1) {
                 completions.addAll(Arrays.asList("all", "messages"));
                 for (World w : Bukkit.getWorlds()) completions.add(w.getName());
+                return StringUtil.copyPartialMatches(currentArg, completions, new ArrayList<>());
             }
-            return StringUtil.copyPartialMatches(currentArg, completions, new ArrayList<>());
+            return Collections.emptyList();
         }
 
         if (subCommand.equals("setheight")) {
             List<String> activeArgs = Arrays.asList(args).subList(flagStartIndex, args.length - 1);
             boolean hasWorldFlag = activeArgs.contains("-world");
             boolean hasHeightFlag = activeArgs.contains("-height");
-            String lastArg = args.length - flagStartIndex > 1 ? args[args.length - 2] : "";
+            String lastArg = (args.length - flagStartIndex > 1) ? args[args.length - 2] : "";
 
             if (lastArg.equalsIgnoreCase("-world")) {
                 for (World w : Bukkit.getWorlds()) completions.add(w.getName());
@@ -185,7 +190,6 @@ public class VoidTabCompleter implements TabCompleter {
                     case "-particle":
                         if (wordsInFlag == 0) {
                             completions.add("NONE");
-                            // Custom implementation tracking both standard Enums and custom variant tokens
                             completions.add("dust_plume");
                             completions.add("dust_pillar");
                             for (Particle p : Particle.values()) completions.add(p.name().toLowerCase());
@@ -200,18 +204,17 @@ public class VoidTabCompleter implements TabCompleter {
                             return StringUtil.copyPartialMatches(currentArg, completions, new ArrayList<>());
                         }
                         if (wordsInFlag == 3) {
-                            // Bug Fix 1: Verify and return data layouts for both valid datatypes and custom variant strings
-                            boolean isDustPlumeOrPillar = particleSelected.equals("DUST_PLUME") || particleSelected.equals("DUST_PILLAR");
+                            boolean isCustomVariant = particleSelected.equals("DUST_PLUME") || particleSelected.equals("DUST_PILLAR");
                             Class<?> dataType = null;
                             try { dataType = Particle.valueOf(particleSelected).getDataType(); } catch (Exception ignored) {}
 
-                            if (dataType == org.bukkit.block.data.BlockData.class || dataType == ItemStack.class) {
+                            if (dataType == org.bukkit.block.data.BlockData.class || particleSelected.equals("DUST_PILLAR")) {
                                 for (Material mat : Material.values()) {
-                                    if (dataType == ItemStack.class || mat.isBlock()) {
-                                        completions.add(mat.name().toLowerCase());
-                                    }
+                                    if (mat.isBlock()) completions.add(mat.name().toLowerCase());
                                 }
-                            } else if (dataType == Particle.DustOptions.class || isDustPlumeOrPillar) {
+                            } else if (dataType == ItemStack.class) {
+                                for (Material mat : Material.values()) completions.add(mat.name().toLowerCase());
+                            } else if (dataType == Particle.DustOptions.class || particleSelected.equals("DUST_PLUME")) {
                                 completions.add("255 0 0 1.0");
                             } else if (dataType == Particle.DustTransition.class) {
                                 completions.add("0 0 255 255 0 0 1.0");

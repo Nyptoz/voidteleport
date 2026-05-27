@@ -6,7 +6,7 @@
 
     <groupId>ru.metall</groupId>
     <artifactId>VoidTeleport</artifactId>
-    <version>1.0.71</version>
+    <version>1.0.8-beta-06</version>
     <packaging>jar</packaging>
 
     <name>VoidTeleport</name>
